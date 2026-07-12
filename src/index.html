@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="ABCD Editor">
+    <title>ABCD Editor</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <h1>ABCD Editor</h1>
+        <div class="toolbar">
+            <button id="btnNew">New</button>
+            <button id="btnSave" class="primary">Save</button>
+            <button id="btnLoad">Load</button>
+            <div class="size-inputs">
+                <span>Size:</span>
+                <input type="number" id="canvasWidth" value="640" min="320" max="1280">
+                <span>x</span>
+                <input type="number" id="canvasHeight" value="640" min="320" max="1280">
+            </div>
+        </div>
+    </header>
+    <div class="main">
+        <aside class="sidebar">
+            <div>
+                <h2>Materials</h2>
+                <div class="material-list" id="materialList"></div>
+            </div>
+            <div class="add-material">
+                <label>1. Material Name</label>
+                <input type="text" id="newMatName" placeholder="e.g. wood, ice">
+                <label>2. Physics Type</label>
+                <select id="newMatPhysics">
+                    <option value="static">Static</option>
+                    <option value="rigidbody">Rigidbody</option>
+                    <option value="trigger">Trigger</option>
+                    <option value="kinematic">Kinematic</option>
+                    <option value="none">None</option>
+                </select>
+                <label>3. Color</label>
+                <div class="color-presets" id="colorPresets">
+                    <div class="color-preset" data-color="#e74c3c" style="background:#e74c3c"></div>
+                    <div class="color-preset" data-color="#e67e22" style="background:#e67e22"></div>
+                    <div class="color-preset selected" data-color="#f1c40f" style="background:#f1c40f"></div>
+                    <div class="color-preset" data-color="#2ecc71" style="background:#2ecc71"></div>
+                    <div class="color-preset" data-color="#3498db" style="background:#3498db"></div>
+                    <div class="color-preset" data-color="#9b59b6" style="background:#9b59b6"></div>
+                    <div class="color-preset" data-color="#7f8c8d" style="background:#7f8c8d"></div>
+                    <div class="color-preset" data-color="#ecf0f1" style="background:#ecf0f1"></div>
+                    <div class="color-preset" data-color="#34495e" style="background:#34495e"></div>
+                    <div class="color-preset" data-color="#1abc9c" style="background:#1abc9c"></div>
+                </div>
+                <label style="font-size: 11px; color: #aaa; margin-top: 3px;">Custom hex (e.g. #ff0000)</label>
+                <input type="text" id="customColor" placeholder="#ff6b6b" value="#f1c40f">
+                <button id="btnAddMat">Add Material</button>
+            </div>
+        </aside>
+        <div class="canvas-container">
+            <canvas id="gridCanvas"></canvas>
+        </div>
+        <aside class="sidebar right">
+            <h2>Levels</h2>
+            <div class="level-actions">
+                <button id="btnAddLevel">+ Add</button>
+                <button id="btnDupLevel">Dup</button>
+            </div>
+            <div class="level-list" id="levelList"></div>
+        </aside>
+    </div>
+
+    <div class="modal" id="saveModal">
+        <div class="modal-content">
+            <h3>Save Project</h3>
+            <p style="font-size:12px; color:#aaa;">Copy all text below and paste it into a note or text file to save your project.</p>
+            <textarea id="saveOutput" readonly></textarea>
+            <div class="modal-buttons">
+                <button id="btnCopySave">Copy</button>
+                <button onclick="closeModal('saveModal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="loadModal">
+        <div class="modal-content">
+            <h3>Load Project</h3>
+            <p style="font-size:12px; color:#aaa;">Paste your saved .abcd project text below.</p>
+            <textarea id="loadInput" placeholder="Paste project data here..."></textarea>
+            <div class="modal-buttons">
+                <button id="btnLoadConfirm" class="primary">Load</button>
+                <button onclick="closeModal('loadModal')">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/materials.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/grid.js"></script>
+    <script src="js/levels.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

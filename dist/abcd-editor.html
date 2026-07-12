@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="ABCD Editor">
+    <title>ABCD Editor</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            touch-action: none;
+        }
+        header {
+            background: #16213e;
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #0f3460;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        header h1 { font-size: 16px; }
+        .toolbar {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        button {
+            background: #0f3460;
+            color: #eee;
+            border: none;
+            padding: 7px 11px;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+        button:active { background: #e94560; }
+        button.primary { background: #e94560; }
+        button.danger { background: #c0392b; }
+        .main {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        .sidebar {
+            width: 200px;
+            background: #16213e;
+            border-right: 1px solid #0f3460;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+        .sidebar.right {
+            border-right: none;
+            border-left: 1px solid #0f3460;
+            width: 170px;
+        }
+        .sidebar h2 { font-size: 13px; margin-bottom: 4px; }
+        .material-list { display: flex; flex-direction: column; gap: 5px; }
+        .material-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px;
+            border-radius: 6px;
+            cursor: pointer;
+            background: #0f3460;
+            flex-wrap: wrap;
+        }
+        .material-item.selected { outline: 2px solid #e94560; }
+        .material-swatch {
+            width: 22px; height: 22px;
+            border-radius: 4px;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        .material-name { font-size: 12px; font-weight: 500; }
+        .material-physics {
+            font-size: 10px;
+            color: #aaa;
+            width: 100%;
+            margin-top: 2px;
+        }
+        .canvas-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px;
+            overflow: auto;
+        }
+        canvas {
+            background: #0a0a0a;
+            border: 2px solid #0f3460;
+            border-radius: 4px;
+            max-width: 100%;
+            max-height: 100%;
+        }
+        .add-material {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            margin-top: 6px;
+            padding-top: 8px;
+            border-top: 1px solid #0f3460;
+        }
+        .add-material label {
+            font-size: 11px;
+            color: #aaa;
+        }
+        .add-material input[type="text"] {
+            width: 100%;
+            padding: 6px;
+            border-radius: 4px;
+            border: 1px solid #0f3460;
+            background: #1a1a2e;
+            color: #eee;
+            font-size: 13px;
+        }
+        .add-material select {
+            width: 100%;
+            padding: 6px;
+            border-radius: 4px;
+            border: 1px solid #0f3460;
+            background: #1a1a2e;
+            color: #eee;
+            font-size: 13px;
+        }
+        .color-presets {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+        .color-preset {
+            width: 26px;
+            height: 26px;
+            border-radius: 4px;
+            border: 2px solid transparent;
+            cursor: pointer;
+        }
+        .color-preset.selected {
+            border-color: #fff;
+        }
+        .add-material button {
+            width: 100%;
+            padding: 8px;
+            font-size: 13px;
+            margin-top: 2px;
+        }
+
+        /* Levels sidebar */
+        .level-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .level-item {
+            background: #0f3460;
+            border-radius: 6px;
+            padding: 6px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            border: 2px solid transparent;
+        }
+        .level-item.active {
+            border-color: #e94560;
+        }
+        .level-thumb {
+            background: #0a0a0a;
+            border-radius: 3px;
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .level-thumb canvas {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        .level-label {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 4px;
+        }
+        .level-label input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: #eee;
+            font-size: 11px;
+            padding: 2px;
+            width: 100%;
+            min-width: 0;
+        }
+        .level-label input:focus {
+            background: #1a1a2e;
+            outline: 1px solid #e94560;
+            border-radius: 3px;
+        }
+        .del-btn {
+            background: transparent;
+            color: #e94560;
+            font-size: 16px;
+            padding: 0 4px;
+            cursor: pointer;
+            flex-shrink: 0;
+            line-height: 1;
+        }
+        .del-btn:active { color: #ff6b81; }
+        .level-actions {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 4px;
+        }
+        .level-actions button {
+            flex: 1;
+            padding: 6px 4px;
+            font-size: 12px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .modal.open { display: flex; }
+        .modal-content {
+            background: #16213e;
+            border-radius: 8px;
+            padding: 18px;
+            width: 100%;
+            max-width: 500px;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .modal-content h3 { font-size: 15px; }
+        .modal-content textarea {
+            width: 100%;
+            height: 180px;
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #0f3460;
+            background: #1a1a2e;
+            color: #eee;
+            font-size: 11px;
+            font-family: monospace;
+            resize: vertical;
+        }
+        .modal-buttons {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+        .size-inputs {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .size-inputs input {
+            width: 50px;
+            padding: 4px;
+            border-radius: 4px;
+            border: 1px solid #0f3460;
+            background: #1a1a2e;
+            color: #eee;
+            font-size: 12px;
+        }
+        .size-inputs span { font-size: 12px; color: #aaa; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>ABCD Editor</h1>
+        <div class="toolbar">
+            <button id="btnNew">New</button>
+            <button id="btnSave" class="primary">Save</button>
+            <button id="btnLoad">Load</button>
+            <div class="size-inputs">
+                <span>Size:</span>
+                <input type="number" id="canvasWidth" value="640" min="320" max="1280">
+                <span>x</span>
+                <input type="number" id="canvasHeight" value="640" min="320" max="1280">
+            </div>
+        </div>
+    </header>
+    <div class="main">
+        <aside class="sidebar">
+            <div>
+                <h2>Materials</h2>
+                <div class="material-list" id="materialList"></div>
+            </div>
+            <div class="add-material">
+                <label>1. Material Name</label>
+                <input type="text" id="newMatName" placeholder="e.g. wood, ice">
+                <label>2. Physics Type</label>
+                <select id="newMatPhysics">
+                    <option value="static">Static</option>
+                    <option value="rigidbody">Rigidbody</option>
+                    <option value="trigger">Trigger</option>
+                    <option value="kinematic">Kinematic</option>
+                    <option value="none">None</option>
+                </select>
+                <label>3. Color</label>
+                <div class="color-presets" id="colorPresets">
+                    <div class="color-preset" data-color="#e74c3c" style="background:#e74c3c"></div>
+                    <div class="color-preset" data-color="#e67e22" style="background:#e67e22"></div>
+                    <div class="color-preset selected" data-color="#f1c40f" style="background:#f1c40f"></div>
+                    <div class="color-preset" data-color="#2ecc71" style="background:#2ecc71"></div>
+                    <div class="color-preset" data-color="#3498db" style="background:#3498db"></div>
+                    <div class="color-preset" data-color="#9b59b6" style="background:#9b59b6"></div>
+                    <div class="color-preset" data-color="#7f8c8d" style="background:#7f8c8d"></div>
+                    <div class="color-preset" data-color="#ecf0f1" style="background:#ecf0f1"></div>
+                    <div class="color-preset" data-color="#34495e" style="background:#34495e"></div>
+                    <div class="color-preset" data-color="#1abc9c" style="background:#1abc9c"></div>
+                </div>
+                <label style="font-size: 11px; color: #aaa; margin-top: 3px;">Custom hex (e.g. #ff0000)</label>
+                <input type="text" id="customColor" placeholder="#ff6b6b" value="#f1c40f">
+                <button id="btnAddMat">Add Material</button>
+            </div>
+        </aside>
+        <div class="canvas-container">
+            <canvas id="gridCanvas"></canvas>
+        </div>
+        <aside class="sidebar right">
+            <h2>Levels</h2>
+            <div class="level-actions">
+                <button id="btnAddLevel">+ Add</button>
+                <button id="btnDupLevel">Dup</button>
+            </div>
+            <div class="level-list" id="levelList"></div>
+        </aside>
+    </div>
+
+    <div class="modal" id="saveModal">
+        <div class="modal-content">
+            <h3>Save Project</h3>
+            <p style="font-size:12px; color:#aaa;">Copy all text below and paste it into a note or text file to save your project.</p>
+            <textarea id="saveOutput" readonly></textarea>
+            <div class="modal-buttons">
+                <button id="btnCopySave">Copy</button>
+                <button onclick="closeModal('saveModal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="loadModal">
+        <div class="modal-content">
+            <h3>Load Project</h3>
+            <p style="font-size:12px; color:#aaa;">Paste your saved .abcd project text below.</p>
+            <textarea id="loadInput" placeholder="Paste project data here..."></textarea>
+            <div class="modal-buttons">
+                <button id="btnLoadConfirm" class="primary">Load</button>
+                <button onclick="closeModal('loadModal')">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+// ============================================================
+// ABCD Editor - Game Level Editor
+// Version: 1.0.0
+// Single-file offline web app for iPad / desktop
+// ============================================================
+
+// --- Materials System ---
+const Materials = (() => {
+    let selectedId = null;
+    const materials = new Map();
+    const PHYSICS_TYPES = ['rigidbody', 'static', 'trigger', 'kinematic', 'none'];
+
+    function add(name, color, physics) {
+        const id = name.toLowerCase().replace(/\s+/g, '_');
+        materials.set(id, { id, name, color, physics: physics || 'static' });
+        return id;
+    }
+
+    function getById(id) { return materials.get(id) || null; }
+    function getAll() { return Array.from(materials.values()); }
+    function select(id) { if (materials.has(id)) selectedId = id; }
+    function getSelected() { return materials.get(selectedId) || null; }
+    function clear() { materials.clear(); selectedId = null; }
+
+    function load(newMaterials, selected) {
+        materials.clear();
+        for (const m of newMaterials) materials.set(m.id, { ...m });
+        selectedId = selected || (materials.size > 0 ? materials.keys().next().value : null);
+    }
+
+    // init
+    add('stone', '#7f8c8d', 'static');
+    add('lava', '#e74c3c', 'trigger');
+    add('spawn', '#2ecc71', 'none');
+    select('stone');
+
+    return { add, getById, getAll, select, getSelected, clear, load, getPhysicsTypes: () => PHYSICS_TYPES };
+})();
+
+// --- Storage System ---
+const Storage = (() => {
+    const VERSION = 3;
+
+    function exportProject(levels, currentLevelId, materials, selectedMaterial, pixelSize) {
+        return JSON.stringify({
+            version: VERSION,
+            name: 'ABCD Project',
+            created: new Date().toISOString(),
+            pixelSize,
+            selectedMaterial,
+            currentLevelId,
+            materials,
+            levels
+        }, null, 2);
+    }
+
+    function importProject(jsonString) {
+        const data = JSON.parse(jsonString);
+        if (!data) throw new Error('Invalid file');
+        return {
+            pixelSize: data.pixelSize || 32,
+            selectedMaterial: data.selectedMaterial || null,
+            currentLevelId: data.currentLevelId || null,
+            materials: data.materials || [],
+            levels: data.levels || [{ id: 'level_1', name: 'Level 1', width: 640, height: 640, grid: [] }]
+        };
+    }
+
+    return { exportProject, importProject };
+})();
+
+// --- Grid System ---
+const Grid = (() => {
+    const PIXEL_SIZE = 32;
+    let cols = 20;
+    let rows = 20;
+    let cells = [];
+    const canvas = document.getElementById('gridCanvas');
+    const ctx = canvas.getContext('2d');
+    let isDrawing = false;
+    let onChange = null;
+
+    function initCells() { cells = new Array(cols * rows).fill(null); }
+    initCells();
+
+    const idx = (x, y) => y * cols + x;
+    const setCell = (x, y, m) => {
+        if (x >= 0 && x < cols && y >= 0 && y < rows) cells[idx(x, y)] = m;
+    };
+    const getCell = (x, y) => (x >= 0 && x < cols && y >= 0 && y < rows) ? cells[idx(x, y)] : null;
+    const clear = () => cells.fill(null);
+    const setOnChange = (fn) => { onChange = fn; };
+    const getPixelSize = () => PIXEL_SIZE;
+
+    function serialize() {
+        const out = [];
+        for (let y = 0; y < rows; y++) {
+            const row = [];
+            for (let x = 0; x < cols; x++) row.push(cells[idx(x, y)]);
+            out.push(row);
+        }
+        return out;
+    }
+
+    function deserialize(data) {
+        clear();
+        if (!data || !Array.isArray(data)) return;
+        for (let y = 0; y < Math.min(rows, data.length); y++) {
+            const row = data[y];
+            if (!Array.isArray(row)) continue;
+            for (let x = 0; x < Math.min(cols, row.length); x++) cells[idx(x, y)] = row[x];
+        }
+    }
+
+    function render() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.strokeStyle = '#1a1a1a';
+        ctx.lineWidth = 1;
+        for (let i = 0; i <= cols; i++) {
+            ctx.beginPath();
+            ctx.moveTo(i * PIXEL_SIZE, 0);
+            ctx.lineTo(i * PIXEL_SIZE, canvas.height);
+            ctx.stroke();
+        }
+        for (let i = 0; i <= rows; i++) {
+            ctx.beginPath();
+            ctx.moveTo(0, i * PIXEL_SIZE);
+            ctx.lineTo(canvas.width, i * PIXEL_SIZE);
+            ctx.stroke();
+        }
+        const fontSize = Math.max(8, PIXEL_SIZE * 0.3);
+        ctx.font = 'bold ' + fontSize + 'px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        for (let y = 0; y < rows; y++) {
+            for (let x = 0; x < cols; x++) {
+                const matId = cells[idx(x, y)];
+                if (!matId) continue;
+                const mat = Materials.getById(matId);
+                if (!mat) continue;
+                ctx.fillStyle = mat.color + '80';
+                ctx.fillRect(x * PIXEL_SIZE + 1, y * PIXEL_SIZE + 1, PIXEL_SIZE - 2, PIXEL_SIZE - 2);
+                ctx.fillStyle = '#fff';
+                ctx.fillText(mat.name, (x + 0.5) * PIXEL_SIZE, (y + 0.5) * PIXEL_SIZE);
+            }
+        }
+    }
+
+    function drawThumbnail(thumbCanvas, size) {
+        const tctx = thumbCanvas.getContext('2d');
+        const cellW = size / cols;
+        const cellH = size / rows;
+        tctx.fillStyle = '#0a0a0a';
+        tctx.fillRect(0, 0, size, size);
+        for (let y = 0; y < rows; y++) {
+            for (let x = 0; x < cols; x++) {
+                const matId = cells[idx(x, y)];
+                if (!matId) continue;
+                const mat = Materials.getById(matId);
+                if (!mat) continue;
+                tctx.fillStyle = mat.color + 'a0';
+                tctx.fillRect(x * cellW, y * cellH, cellW, cellH);
+            }
+        }
+    }
+
+    function resize(canvasWidth, canvasHeight, keepData) {
+        const oldData = keepData ? serialize() : null;
+        const oldCols = cols;
+        const oldRows = rows;
+        canvas.width = canvasWidth;
+        canvas.height = canvasHeight;
+        cols = Math.floor(canvasWidth / PIXEL_SIZE);
+        rows = Math.floor(canvasHeight / PIXEL_SIZE);
+        initCells();
+        if (oldData) {
+            for (let y = 0; y < Math.min(rows, oldRows); y++) {
+                for (let x = 0; x < Math.min(cols, oldCols); x++) {
+                    cells[idx(x, y)] = oldData[y][x];
+                }
+            }
+        }
+        render();
+    }
+
+    function getGridPos(evt) {
+        const rect = canvas.getBoundingClientRect();
+        const cx = evt.clientX || (evt.touches && evt.touches[0] && evt.touches[0].clientX);
+        const cy = evt.clientY || (evt.touches && evt.touches[0] && evt.touches[0].clientY);
+        if (cx == null || cy == null) return { x: -1, y: -1 };
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        return {
+            x: Math.floor(((cx - rect.left) * scaleX) / PIXEL_SIZE),
+            y: Math.floor(((cy - rect.top) * scaleY) / PIXEL_SIZE)
+        };
+    }
+
+    function paintAt(pos) {
+        if (pos.x < 0 || pos.x >= cols || pos.y < 0 || pos.y >= rows) return false;
+        const existing = getCell(pos.x, pos.y);
+        if (existing) {
+            setCell(pos.x, pos.y, null);
+        } else {
+            const mat = Materials.getSelected();
+            if (mat) setCell(pos.x, pos.y, mat.id);
+        }
+        return true;
+    }
+
+    function paintOnlyNew(pos) {
+        if (pos.x < 0 || pos.x >= cols || pos.y < 0 || pos.y >= rows) return false;
+        const existing = getCell(pos.x, pos.y);
+        if (existing) return false;
+        const mat = Materials.getSelected();
+        if (mat) {
+            setCell(pos.x, pos.y, mat.id);
+            return true;
+        }
+        return false;
+    }
+
+    function handleStart(evt) {
+        evt.preventDefault();
+        isDrawing = true;
+        const pos = getGridPos(evt);
+        if (paintAt(pos)) {
+            render();
+            if (onChange) onChange();
+        }
+    }
+
+    function handleMove(evt) {
+        if (!isDrawing) return;
+        evt.preventDefault();
+        const pos = getGridPos(evt);
+        if (paintOnlyNew(pos)) {
+            render();
+            if (onChange) onChange();
+        }
+    }
+
+    function handleEnd() { isDrawing = false; }
+
+    canvas.addEventListener('mousedown', handleStart);
+    canvas.addEventListener('mousemove', handleMove);
+    canvas.addEventListener('mouseup', handleEnd);
+    canvas.addEventListener('mouseleave', handleEnd);
+    canvas.addEventListener('touchstart', handleStart, { passive: false });
+    canvas.addEventListener('touchmove', handleMove, { passive: false });
+    canvas.addEventListener('touchend', handleEnd);
+    canvas.addEventListener('touchcancel', handleEnd);
+    canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+
+    return {
+        setCell, getCell, clear, serialize, deserialize, render, resize,
+        drawThumbnail, setOnChange, getPixelSize,
+        getInfo: () => ({ cols, rows, pixelSize: PIXEL_SIZE })
+    };
+})();
+
+// --- Levels System ---
+const Levels = (() => {
+    let levels = [];
+    let currentId = null;
+    let nextNum = 1;
+
+    function createLevel(name, width, height) {
+        const num = nextNum++;
+        return {
+            id: 'level_' + num,
+            name: name || ('Level ' + num),
+            width: width || 640,
+            height: height || 640,
+            grid: []
+        };
+    }
+
+    function getAll() { return levels.map(l => ({ ...l })); }
+    function getCurrent() { return levels.find(l => l.id === currentId) || null; }
+    function getCurrentId() { return currentId; }
+
+    function saveCurrent() {
+        const cur = getCurrent();
+        if (cur) cur.grid = Grid.serialize();
+    }
+
+    function loadLevel(id) {
+        saveCurrent();
+        const l = levels.find(l => l.id === id);
+        if (!l) return false;
+        currentId = id;
+        document.getElementById('canvasWidth').value = l.width;
+        document.getElementById('canvasHeight').value = l.height;
+        Grid.resize(l.width, l.height, false);
+        Grid.deserialize(l.grid);
+        Grid.render();
+        return true;
+    }
+
+    function addLevel() {
+        saveCurrent();
+        const cur = getCurrent();
+        const l = createLevel(null, cur ? cur.width : 640, cur ? cur.height : 640);
+        levels.push(l);
+        currentId = l.id;
+        Grid.resize(l.width, l.height, false);
+        Grid.render();
+        return l;
+    }
+
+    function duplicateLevel() {
+        saveCurrent();
+        const cur = getCurrent();
+        if (!cur) return null;
+        const l = createLevel(cur.name + ' copy', cur.width, cur.height);
+        l.grid = JSON.parse(JSON.stringify(cur.grid));
+        const idx = levels.findIndex(x => x.id === cur.id);
+        levels.splice(idx + 1, 0, l);
+        currentId = l.id;
+        Grid.resize(l.width, l.height, false);
+        Grid.deserialize(l.grid);
+        Grid.render();
+        return l;
+    }
+
+    function deleteLevel(id) {
+        if (levels.length <= 1) return false;
+        const idx = levels.findIndex(l => l.id === id);
+        if (idx === -1) return false;
+        levels.splice(idx, 1);
+        if (currentId === id) {
+            const newIdx = Math.min(idx, levels.length - 1);
+            currentId = levels[newIdx].id;
+            loadLevel(currentId);
+        }
+        return true;
+    }
+
+    function renameLevel(id, name) {
+        const l = levels.find(l => l.id === id);
+        if (l) l.name = name;
+    }
+
+    function resizeCurrent(w, h) {
+        const cur = getCurrent();
+        if (!cur) return;
+        cur.width = w;
+        cur.height = h;
+        Grid.resize(w, h, true);
+    }
+
+    function loadProject(projectData) {
+        levels = [];
+        nextNum = 1;
+        for (const l of projectData.levels) {
+            const match = l.id.match(/level_(\d+)/);
+            const num = match ? parseInt(match[1]) : 0;
+            if (num >= nextNum) nextNum = num + 1;
+            levels.push({
+                id: l.id,
+                name: l.name || 'Level',
+                width: l.width || 640,
+                height: l.height || 640,
+                grid: l.grid || []
+            });
+        }
+        if (levels.length === 0) {
+            const l = createLevel('Level 1', 640, 640);
+            levels.push(l);
+            currentId = l.id;
+            return;
+        }
+        // Make sure nextNum is at least highest + 1
+        let maxNum = 0;
+        for (const l of levels) {
+            const m = l.id.match(/level_(\d+)/);
+            if (m) {
+                const n = parseInt(m[1]);
+                if (n > maxNum) maxNum = n;
+            }
+        }
+        nextNum = maxNum + 1;
+        currentId = projectData.currentLevelId || levels[0].id;
+        if (!levels.find(l => l.id === currentId)) currentId = levels[0].id;
+        const cur = getCurrent();
+        document.getElementById('canvasWidth').value = cur.width;
+        document.getElementById('canvasHeight').value = cur.height;
+        Grid.resize(cur.width, cur.height, false);
+        Grid.deserialize(cur.grid);
+        Grid.render();
+    }
+
+    function exportAll() {
+        saveCurrent();
+        return levels.map(l => ({
+            id: l.id,
+            name: l.name,
+            width: l.width,
+            height: l.height,
+            grid: l.grid
+        }));
+    }
+
+    // init
+    const first = createLevel('Level 1', 640, 640);
+    levels.push(first);
+    currentId = first.id;
+
+    return {
+        getAll, getCurrent, getCurrentId, saveCurrent, loadLevel,
+        addLevel, duplicateLevel, deleteLevel, renameLevel,
+        resizeCurrent, loadProject, exportAll
+    };
+})();
+
+// --- UI Controller ---
+(() => {
+    const $ = (id) => document.getElementById(id);
+    const materialList = $('materialList');
+    const newMatName = $('newMatName');
+    const newMatPhysics = $('newMatPhysics');
+    const customColor = $('customColor');
+    const colorPresets = $('colorPresets');
+    const levelList = $('levelList');
+    const canvasWidthInput = $('canvasWidth');
+    const canvasHeightInput = $('canvasHeight');
+    let selectedPresetColor = '#f1c40f';
+
+    function refreshMaterialList() {
+        materialList.innerHTML = '';
+        const selected = Materials.getSelected();
+        for (const mat of Materials.getAll()) {
+            const item = document.createElement('div');
+            item.className = 'material-item' + (mat.id === selected?.id ? ' selected' : '');
+            item.innerHTML =
+                '<div class="material-swatch" style="background:' + mat.color + '"></div>' +
+                '<span class="material-name">' + mat.name + '</span>' +
+                '<span class="material-physics">' + mat.physics + '</span>';
+            item.addEventListener('click', () => {
+                Materials.select(mat.id);
+                refreshMaterialList();
+            });
+            materialList.appendChild(item);
+        }
+    }
+
+    function renderLevelList() {
+        levelList.innerHTML = '';
+        const all = Levels.getAll();
+        for (const l of all) {
+            const item = document.createElement('div');
+            item.className = 'level-item' + (l.id === Levels.getCurrentId() ? ' active' : '');
+            item.innerHTML =
+                '<div class="level-thumb"><canvas width="80" height="80"></canvas></div>' +
+                '<div class="level-label">' +
+                    '<input type="text" value="' + l.name + '" data-id="' + l.id + '">' +
+                    '<button class="del-btn" data-id="' + l.id + '" title="Delete">&times;</button>' +
+                '</div>';
+
+            item.addEventListener('click', (e) => {
+                if (e.target.tagName === 'INPUT' || e.target.classList.contains('del-btn')) return;
+                switchLevel(l.id);
+            });
+
+            const nameInput = item.querySelector('input');
+            nameInput.addEventListener('change', (e) => {
+                Levels.renameLevel(l.id, e.target.value);
+            });
+            nameInput.addEventListener('click', (e) => e.stopPropagation());
+
+            const delBtn = item.querySelector('.del-btn');
+            delBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (Levels.getAll().length <= 1) {
+                    alert('At least one level is required.');
+                    return;
+                }
+                if (confirm('Delete level "' + l.name + '"?')) {
+                    Levels.deleteLevel(l.id);
+                    renderLevelList();
+                    drawAllThumbnails();
+                }
+            });
+
+            levelList.appendChild(item);
+        }
+    }
+
+    function drawAllThumbnails() {
+        const items = levelList.querySelectorAll('.level-item');
+        const savedId = Levels.getCurrentId();
+        items.forEach((item, i) => {
+            const lvls = Levels.getAll();
+            if (i >= lvls.length) return;
+            const l = lvls[i];
+            // switch to that level temporarily
+            const cur = Levels.getCurrent();
+            const tempData = cur ? Grid.serialize() : null;
+            const tempW = cur ? cur.width : 640;
+            const tempH = cur ? cur.height : 640;
+
+            Grid.resize(l.width, l.height, false);
+            Grid.deserialize(l.grid);
+            const thumbCanvas = item.querySelector('canvas');
+            Grid.drawThumbnail(thumbCanvas, 80);
+
+            // restore
+            Grid.resize(tempW, tempH, false);
+            if (tempData) Grid.deserialize(tempData);
+            Grid.render();
+        });
+    }
+
+    function switchLevel(id) {
+        if (Levels.getCurrentId() === id) return;
+        Levels.loadLevel(id);
+        renderLevelList();
+        drawAllThumbnails();
+    }
+
+    // --- Color presets ---
+    colorPresets.addEventListener('click', (e) => {
+        const preset = e.target.closest('.color-preset');
+        if (!preset) return;
+        const color = preset.dataset.color;
+        selectedPresetColor = color;
+        customColor.value = color;
+        colorPresets.querySelectorAll('.color-preset').forEach(p => p.classList.remove('selected'));
+        preset.classList.add('selected');
+    });
+
+    customColor.addEventListener('input', () => {
+        const val = customColor.value.trim();
+        if (/^#[0-9A-Fa-f]{6}$/.test(val)) {
+            selectedPresetColor = val;
+            colorPresets.querySelectorAll('.color-preset').forEach(p => p.classList.remove('selected'));
+        }
+    });
+
+    // --- Add Material ---
+    $('btnAddMat').addEventListener('click', () => {
+        const name = newMatName.value.trim();
+        if (!name) return;
+        Materials.add(name, selectedPresetColor, newMatPhysics.value);
+        newMatName.value = '';
+        refreshMaterialList();
+    });
+
+    // --- Level Actions ---
+    $('btnAddLevel').addEventListener('click', () => {
+        Levels.addLevel();
+        renderLevelList();
+        drawAllThumbnails();
+    });
+
+    $('btnDupLevel').addEventListener('click', () => {
+        Levels.duplicateLevel();
+        renderLevelList();
+        drawAllThumbnails();
+    });
+
+    // --- Top Toolbar ---
+    $('btnNew').addEventListener('click', () => {
+        if (confirm('Create a new project? All unsaved changes will be lost.')) {
+            location.reload();
+        }
+    });
+
+    $('btnSave').addEventListener('click', () => {
+        Levels.saveCurrent();
+        const json = Storage.exportProject(
+            Levels.exportAll(),
+            Levels.getCurrentId(),
+            Materials.getAll(),
+            Materials.getSelected()?.id || null,
+            Grid.getPixelSize()
+        );
+        $('saveOutput').value = json;
+        openModal('saveModal');
+    });
+
+    $('btnCopySave').addEventListener('click', () => {
+        const ta = $('saveOutput');
+        ta.select();
+        ta.setSelectionRange(0, ta.value.length);
+        try {
+            document.execCommand('copy');
+            alert('Copied! Paste into a note or text file to save your project.');
+        } catch(e) {
+            alert('Please select all text and copy manually.');
+        }
+    });
+
+    $('btnLoad').addEventListener('click', () => {
+        $('loadInput').value = '';
+        openModal('loadModal');
+    });
+
+    $('btnLoadConfirm').addEventListener('click', () => {
+        const text = $('loadInput').value.trim();
+        if (!text) return;
+        try {
+            const data = Storage.importProject(text);
+            Materials.load(data.materials, data.selectedMaterial);
+            Levels.loadProject(data);
+            refreshMaterialList();
+            renderLevelList();
+            drawAllThumbnails();
+            closeModal('loadModal');
+        } catch (err) {
+            alert('Failed to load project: ' + err.message);
+        }
+    });
+
+    // --- Canvas Resize ---
+    function applyCanvasSize() {
+        const w = parseInt(canvasWidthInput.value) || 640;
+        const h = parseInt(canvasHeightInput.value) || 640;
+        Levels.resizeCurrent(w, h);
+        drawAllThumbnails();
+    }
+    canvasWidthInput.addEventListener('change', applyCanvasSize);
+    canvasHeightInput.addEventListener('change', applyCanvasSize);
+
+    // --- Grid Change → update thumbnails ---
+    Grid.setOnChange(() => {
+        Levels.saveCurrent();
+        // Throttle: only update current level's thumb
+        const curIdx = Levels.getAll().findIndex(l => l.id === Levels.getCurrentId());
+        if (curIdx >= 0) {
+            const items = levelList.querySelectorAll('.level-item');
+            if (items[curIdx]) {
+                const thumbCanvas = items[curIdx].querySelector('canvas');
+                Grid.drawThumbnail(thumbCanvas, 80);
+            }
+        }
+    });
+
+    // --- Init ---
+    const defW = parseInt(canvasWidthInput.value) || 640;
+    const defH = parseInt(canvasHeightInput.value) || 640;
+    Grid.resize(defW, defH, false);
+    refreshMaterialList();
+    renderLevelList();
+    drawAllThumbnails();
+    Grid.render();
+})();
+
+// --- Modal Helpers ---
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+</script>
+</body>
+</html>
